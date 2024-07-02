@@ -1,11 +1,12 @@
 package main
 
 import (
-  "bytes"
+	"bytes"
 	"flag"
 	"fmt"
 	"image"
 	"image/color"
+	"image/jpeg"
 	"log"
 	"os"
 
@@ -24,60 +25,51 @@ func main() {
 	CRH = *cx
 	CRV = *cy
 
-  cam, err := webcam.Open("/dev/video0") // 1196444237
-  if err != nil {
-    log.Fatal(err)
-  }
-  defer cam.Close()
-  cam.SetImageFormat(webcam.PixelFormat(1196444237), 1000, 1000)
-  //fmt.Println(uint64(cam.fd))
+	cam, err := webcam.Open("/dev/video0")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer cam.Close()
 
-  err = cam.StartStreaming()
-  if err != nil {
-    log.Fatal(err)
-  }
+	err = cam.StartStreaming()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-  timeout := uint32(10)
-  for {
-    err = cam.WaitForFrame(timeout)
+	for {
+		err = cam.WaitForFrame(uint32(5))
 
-    switch err.(type) {
-      case nil:
-      case *webcam.Timeout:
-        fmt.Fprint(os.Stderr, err.Error())
-        continue
-      default:
-        log.Fatal(err)
-    }
+		switch err.(type) {
+		case nil:
+		case *webcam.Timeout:
+			fmt.Fprint(os.Stderr, err.Error())
+			continue
+		default:
+			log.Fatal(err)
+		}
 
-    frame, err := cam.ReadFrame()
-    if len(frame) != 0 {
-    } else if err != nil {
-      log.Fatal(err)
-    }
-    
-    // fmt.Println(cam.GetSupportedFormats())
+		frame, err := cam.ReadFrame()
+		if err != nil {
+			log.Fatal(err)
+		}
 
-    /*
-    matrix := parseImage(byteToImage(frame))
-	  for i := 0; i < len(matrix[0]); i++ {
-		  for j := 0; j < len(matrix); j++ {
-			  fmt.Print(toAscii(matrix[j][i]))
-		  }
-		  fmt.Println()
-	  }
-    */
-  }
-
-	
+		matrix := parseImage(byteToImage(frame))
+		fmt.Print("\033[H\033[2J")
+		for i := 0; i < len(matrix[0]); i++ {
+			for j := 0; j < len(matrix); j++ {
+				fmt.Print(toAscii(matrix[j][i]))
+			}
+			fmt.Println()
+		}
+	}
 }
 
 func byteToImage(imgByte []byte) image.Image {
-    img, _, err := image.Decode(bytes.NewReader(imgByte))
-    if err != nil {
-        log.Fatal(err)
-    }
-    return img
+	img, err := jpeg.Decode(bytes.NewReader(imgByte))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return img
 }
 
 func parseImage(img image.Image) [][]float64 {
