@@ -30,6 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer cam.Close()
+  cam.SetImageFormat(webcam.PixelFormat(1196444237), 1280, 720) // 720p
 
 	err = cam.StartStreaming()
 	if err != nil {
@@ -37,7 +38,7 @@ func main() {
 	}
 
 	for {
-		err = cam.WaitForFrame(uint32(5))
+		err = cam.WaitForFrame(uint32(8))
 
 		switch err.(type) {
 		case nil:
